@@ -3,3 +3,5 @@ pandas
 langchain-groq
 langchain-core
 python-dotenv
+matplotlib
+seaborn
