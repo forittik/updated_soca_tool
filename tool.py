@@ -47,7 +47,7 @@ def load_data():
     file_path = 'https://raw.githubusercontent.com/forittik/updated_soca_tool/refs/heads/main/Dummy_questions.csv'
     
     # Load the data from the CSV file without a header
-    df = pd.read_csv(file_path, header=None, encoding='ISO-8859-1')  # or try 'utf-16'
+    df = pd.read_csv(file_path, header=0, encoding='ISO-8859-1')  # or try 'utf-16'
 
     return df
 
