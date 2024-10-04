@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -91,6 +93,35 @@ def process_students(names, df):
             return "No data found for the given students."
         return generate_multiple_students_summary(combined_data)
 
+def plot_productivity_rate(df):
+    plt.figure(figsize=(10, 6))
+    sns.countplot(data=df, x='Productivity_yes_no', palette='Set2')
+    plt.title('Student Productivity Distribution')
+    plt.xlabel('Productivity (Yes/No)')
+    plt.ylabel('Number of Students')
+    st.pyplot(plt)
+
+def plot_average_marks(df):
+    subjects = ['Marks_got_in_physics_chapters', 'Marks_got_in_chemistry_chapters', 'Marks_got_in_mathematics_chapters']
+    average_marks = df[subjects].mean()
+    
+    plt.figure(figsize=(10, 6))
+    average_marks.plot(kind='bar', color='skyblue')
+    plt.title('Average Marks per Subject')
+    plt.xlabel('Subjects')
+    plt.ylabel('Average Marks')
+    st.pyplot(plt)
+
+def plot_emotional_factors(df):
+    plt.figure(figsize=(10, 6))
+    emotional_counts = df['Emotional_factors'].value_counts()
+    sns.barplot(x=emotional_counts.index, y=emotional_counts.values, palette='Set2')
+    plt.title('Emotional Factors Affecting Students')
+    plt.xticks(rotation=45)
+    plt.xlabel('Emotional Factors')
+    plt.ylabel('Number of Students')
+    st.pyplot(plt)
+
 st.title("B2B Dashboard")
 df = load_data()
 # Aggregate the student data
@@ -102,5 +133,10 @@ if st.button("Analyze student data"):
     if selected_names:
         summary = process_students(selected_names, aggregated_df)
         st.write(summary)
+
+        # Call visualization functions
+        plot_productivity_rate(aggregated_df)
+        plot_average_marks(aggregated_df)
+        plot_emotional_factors(aggregated_df)
     else:
         st.warning("Please select at least one student.")
