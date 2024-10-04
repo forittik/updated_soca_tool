@@ -110,23 +110,23 @@ df = load_data()
 aggregated_df = aggregate_student_data(df)
 student_names = aggregated_df['user_id'].tolist()
 
-# Sidebar Dropdown for student selection
-selected_name = st.sidebar.selectbox("Select a student to analyze:", student_names)
+# Sidebar Dropdown for student selection (now multiselect)
+selected_names = st.sidebar.multiselect("Select student(s) to analyze:", student_names)
 
 if st.button("Analyze Student Data"):
-    if selected_name:
-        summary = process_students(selected_name, aggregated_df)
+    if selected_names:
+        summary = process_students(selected_names, aggregated_df)
         st.write(summary)
     else:
-        st.warning("Please select a student.")
+        st.warning("Please select at least one student.")
 
 # Button to generate plots
 if st.button("Show Performance Pie Chart"):
-    if selected_name:
-        student_data = get_student_data(selected_name, aggregated_df)
-        if student_data is not None:
-            fig = create_performance_pie_chart(student_data)
-            st.plotly_chart(fig)
+    if selected_names:
+        for name in selected_names:
+            student_data = get_student_data(name, aggregated_df)
+            if student_data is not None:
+                fig = create_performance_pie_chart(student_data)
+                st.plotly_chart(fig)
     else:
-        st.warning("Please select a student.")
-
+        st.warning("Please select at least one student.")
