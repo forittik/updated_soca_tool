@@ -12,7 +12,37 @@ groq_api_key = os.environ.get("GROQ_API_KEY")
 
 llm = ChatGroq(temperature=0, model_name="llama3-70b-8192", api_key=groq_api_key)
 
-# Prompt templates remain unchanged
+# Define the prompt templates
+summary_prompt_single = PromptTemplate.from_template("""\
+Here is the data for the student:
+The given structured data is complex, but the structure can be broken down as follows:
+1. Column 1: user_id – A unique identifier for each student.
+2. Columns 2 to 10: Subject_Scores – A collection of chapters for each subject (Physics, Chemistry, and Mathematics), along with the questions asked from each chapter and the corresponding marks obtained.
+3. Column 11: Productivity_yes_no – This indicates whether the student was considered productive or not ("Yes" or "No").
+4. Column 12: Productivity_rate – A numerical scale ranging from 1 to 10, reflecting the student's productivity based on their overall performance in the subjects.
+5. Column 13: Emotional_factors – Captures details about any emotional or psychological elements that might have affected the student's performance.
+
+{context}
+
+Based on this data, generate a descriptive summary of the student's strengths, opportunities, and challenges.
+Also provide some specific suggestions on how the student can improve. Avoid generic statements.
+""")
+
+summary_prompt_multiple = PromptTemplate.from_template("""\
+Here is the data for the students:
+The given structured data is complex, but the structure can be broken down as follows:
+1. Column 1: user_id – A unique identifier for each student.
+2. Columns 2 to 10: Subject_Scores – A collection of chapters for each subject (Physics, Chemistry, and Mathematics), along with the questions asked from each chapter and the corresponding marks obtained.
+3. Column 11: Productivity_yes_no – This indicates whether the student was considered productive or not ("Yes" or "No").
+4. Column 12: Productivity_rate – A numerical scale ranging from 1 to 10, reflecting the student's productivity based on their overall performance in the subjects.
+5. Column 13: Emotional_factors – Captures details about any emotional or psychological elements that might have affected the student's performance.
+
+{context}
+
+Generate a detailed summary of the strengths, opportunities, and challenges for these students.
+Provide specific insights for each student, and compare their strengths and areas for improvement.
+Suggest ways they can learn from each other and address their challenges collaboratively where applicable.
+""")
 
 @st.cache_data
 def load_data():
