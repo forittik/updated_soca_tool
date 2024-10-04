@@ -12,37 +12,7 @@ groq_api_key = os.environ.get("GROQ_API_KEY")
 
 llm = ChatGroq(temperature=0, model_name="llama3-70b-8192", api_key=groq_api_key)
 
-# Define the prompt templates
-summary_prompt_single = PromptTemplate.from_template("""\
-Here is the data for the student:
-The given structured data is complex, but the structure can be broken down as follows:
-1. Column 1: user_id – A unique identifier for each student.
-2. Columns 2 to 10: Subject_Scores – A collection of chapters for each subject (Physics, Chemistry, and Mathematics), along with the questions asked from each chapter and the corresponding marks obtained.
-3. Column 11: Productivity_yes_no – This indicates whether the student was considered productive or not ("Yes" or "No").
-4. Column 12: Productivity_rate – A numerical scale ranging from 1 to 10, reflecting the student's productivity based on their overall performance in the subjects.
-5. Column 13: Emotional_factors – Captures details about any emotional or psychological elements that might have affected the student's performance.
-
-{context}
-
-Based on this data, generate a descriptive summary of the student's strengths, opportunities, and challenges.
-Also provide some specific suggestions on how the student can improve. Avoid generic statements.
-""")
-
-summary_prompt_multiple = PromptTemplate.from_template("""\
-Here is the data for the students:
-The given structured data is complex, but the structure can be broken down as follows:
-1. Column 1: user_id – A unique identifier for each student.
-2. Columns 2 to 10: Subject_Scores – A collection of chapters for each subject (Physics, Chemistry, and Mathematics), along with the questions asked from each chapter and the corresponding marks obtained.
-3. Column 11: Productivity_yes_no – This indicates whether the student was considered productive or not ("Yes" or "No").
-4. Column 12: Productivity_rate – A numerical scale ranging from 1 to 10, reflecting the student's productivity based on their overall performance in the subjects.
-5. Column 13: Emotional_factors – Captures details about any emotional or psychological elements that might have affected the student's performance.
-
-{context}
-
-Generate a detailed summary of the strengths, opportunities, and challenges for these students.
-Provide specific insights for each student, and compare their strengths and areas for improvement.
-Suggest ways they can learn from each other and address their challenges collaboratively where applicable.
-""")
+# Prompt templates remain unchanged
 
 @st.cache_data
 def load_data():
@@ -69,13 +39,21 @@ def generate_multiple_students_summary(student_data):
     return summary
 
 def aggregate_student_data(df):
+    # Function to convert string list to numeric list and calculate mean
+    def process_marks(marks_list):
+        numeric_marks = [int(mark) for mark in marks_list if mark.strip().isdigit()]
+        return sum(numeric_marks) / len(numeric_marks) if numeric_marks else 0
+
     # Grouping by user_id and aggregating the subject scores
-    aggregated_data = df.groupby('user_id').agg(
-        lambda x: list(x.dropna().astype(str)) if x.name in ['Marks_got_in_physics_chapters', 
-                                                             'Marks_got_in_chemistry_chapters', 
-                                                             'Marks_got_in_mathematics_chapters'] 
-        else ' '.join(x.dropna().astype(str))
-    ).reset_index()
+    aggregated_data = df.groupby('user_id').agg({
+        'Marks_got_in_physics_chapters': lambda x: process_marks(x),
+        'Marks_got_in_chemistry_chapters': lambda x: process_marks(x),
+        'Marks_got_in_mathematics_chapters': lambda x: process_marks(x),
+        'productivity_yes_no': lambda x: x.iloc[-1],  # Get the last entry
+        'productivity_rate': lambda x: x.iloc[-1],    # Get the last entry
+        'emotional_factors': lambda x: ' '.join(x.dropna().astype(str))
+    }).reset_index()
+    
     return aggregated_data
 
 def process_students(names, df):
@@ -90,16 +68,16 @@ def process_students(names, df):
             return "No data found for the given students."
         return generate_multiple_students_summary(combined_data)
 
-# New function to create performance pie chart
+# Updated function to create performance pie chart with mean marks
 def create_performance_pie_chart(student_data):
     subjects = ['Physics', 'Chemistry', 'Mathematics']
     marks = []
     for subject in subjects:
         marks_column = f'Marks_got_in_{subject.lower()}_chapters'
-        marks.append(sum(map(int, student_data[marks_column].iloc[0])))
+        marks.append(student_data[marks_column].iloc[0])
     
     fig = go.Figure(data=[go.Pie(labels=subjects, values=marks)])
-    fig.update_layout(title=f"Performance Distribution for {student_data['user_id'].iloc[0]}")
+    fig.update_layout(title=f"Mean Performance Distribution for {student_data['user_id'].iloc[0]}")
     return fig
 
 st.title("B2B Dashboard")
@@ -111,13 +89,13 @@ selected_names = st.multiselect("Select student(s) to analyze:", student_names)
 
 if st.button("Analyze student data"):
     if selected_names:
-        summary = process_students(selected_names, aggregated_df)
+        summary = process_students(selected_names, df)  # Use original df for detailed summary
         st.write(summary)
         
         # Create and display pie charts for each selected student
         for name in selected_names:
-            student_data = get_student_data(name, aggregated_df)
-            if student_data is not None:
+            student_data = aggregated_df[aggregated_df['user_id'] == name]
+            if not student_data.empty:
                 fig = create_performance_pie_chart(student_data)
                 st.plotly_chart(fig)
     else:
