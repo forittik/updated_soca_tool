@@ -69,29 +69,13 @@ def generate_multiple_students_summary(student_data):
     return summary
 
 def aggregate_student_data(df):
-    # Function to convert mixed type list to numeric list and calculate mean
-    def process_marks(marks_list):
-        numeric_marks = []
-        for mark in marks_list:
-            if isinstance(mark, (int, float)):
-                numeric_marks.append(mark)
-            elif isinstance(mark, str):
-                try:
-                    numeric_marks.append(float(mark.strip()))
-                except ValueError:
-                    pass  # Ignore non-numeric strings
-        return sum(numeric_marks) / len(numeric_marks) if numeric_marks else 0
-
     # Grouping by user_id and aggregating the subject scores
-    aggregated_data = df.groupby('user_id').agg({
-        'Marks_got_in_physics_chapters': process_marks,
-        'Marks_got_in_chemistry_chapters': process_marks,
-        'Marks_got_in_mathematics_chapters': process_marks,
-        'productivity_yes_no': lambda x: x.iloc[-1],  # Get the last entry
-        'productivity_rate': lambda x: x.iloc[-1],    # Get the last entry
-        'emotional_factors': lambda x: ' '.join(x.dropna().astype(str))
-    }).reset_index()
-    
+    aggregated_data = df.groupby('user_id').agg(
+        lambda x: list(x.dropna().astype(str)) if x.name in ['Marks_got_in_physics_chapters', 
+                                                             'Marks_got_in_chemistry_chapters', 
+                                                             'Marks_got_in_mathematics_chapters'] 
+        else ' '.join(x.dropna().astype(str))
+    ).reset_index()
     return aggregated_data
 
 def process_students(names, df):
@@ -106,16 +90,16 @@ def process_students(names, df):
             return "No data found for the given students."
         return generate_multiple_students_summary(combined_data)
 
-# Updated function to create performance pie chart with mean marks
+# New function to create performance pie chart
 def create_performance_pie_chart(student_data):
     subjects = ['Physics', 'Chemistry', 'Mathematics']
     marks = []
     for subject in subjects:
         marks_column = f'Marks_got_in_{subject.lower()}_chapters'
-        marks.append(student_data[marks_column].iloc[0])
+        marks.append(sum(map(int, student_data[marks_column].iloc[0])))
     
     fig = go.Figure(data=[go.Pie(labels=subjects, values=marks)])
-    fig.update_layout(title=f"Mean Performance Distribution for {student_data['user_id'].iloc[0]}")
+    fig.update_layout(title=f"Performance Distribution for {student_data['user_id'].iloc[0]}")
     return fig
 
 st.title("B2B Dashboard")
@@ -127,13 +111,13 @@ selected_names = st.multiselect("Select student(s) to analyze:", student_names)
 
 if st.button("Analyze student data"):
     if selected_names:
-        summary = process_students(selected_names, df)  # Use original df for detailed summary
+        summary = process_students(selected_names, aggregated_df)
         st.write(summary)
         
         # Create and display pie charts for each selected student
         for name in selected_names:
-            student_data = aggregated_df[aggregated_df['user_id'] == name]
-            if not student_data.empty:
+            student_data = get_student_data(name, aggregated_df)
+            if student_data is not None:
                 fig = create_performance_pie_chart(student_data)
                 st.plotly_chart(fig)
     else:
