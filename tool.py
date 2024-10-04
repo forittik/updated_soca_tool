@@ -1,7 +1,5 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -13,14 +11,14 @@ groq_api_key = os.environ.get("GROQ_API_KEY")
 
 llm = ChatGroq(temperature=0, model_name="llama3-70b-8192", api_key=groq_api_key)
 
-summary_prompt_single = PromptTemplate.from_template("""\
+summary_prompt_single = PromptTemplate.from_template("""
 Here is the data for the student:
 The given structured data is complex, but the structure can be broken down as follows:
 1. Column 1: user_id – A unique identifier for each student.
-2. Columns 2 to 10: Subject_Scores – A collection of chapters for each subject (Physics, Chemistry, and Mathematics), along with the questions asked from each chapter and the corresponding marks obtained. The structure alternates between the chapter names, the questions asked, and the marks received in each subject. Physics Chapters: Contains the chapter name and the questions asked from each chapter in physics, along with the marks scored by the student, Chemistry Chapters: Similarly, includes the chapter name, question, and marks scored in chemistry, Mathematics Chapters: Contains the chapter name, the specific question asked, and the marks scored in mathematics.
-3. Column 11: productivity_yes_no – This indicates whether the student was considered productive or not ("Yes" or "No").
-4. Column 12: productivity_rate – A numerical scale ranging from 1 to 10, reflecting the student’s productivity based on their overall performance in the subjects.
-5. Column 13: emotional_factors – Captures details about any emotional or psychological elements that might have affected the student’s performance, such as emotional stress, lack of motivation, or academic backlogs. This column highlights specific issues that could impact productivity and marks, such as "EMOTIONAL FACTORS" or "BACKLOGS". This column helps highlight specific concerns affecting the student. (academic_panic_buttons = ("MISSED CLASSES", "BACKLOGS", "LACK OF MOTIVATION", "NOT UNDERSTANDING", "BAD MARKS"), non_academic_panic_buttons = ("EMOTIONAL FACTORS", "PROCRASTINATE", "LOST INTEREST", "LACK OF FOCUS", "GOALS NOT ACHIEVED", "LACK OF DISCIPLINE"))
+2. Columns 2 to 10: Subject_Scores – A collection of chapters for each subject (Physics, Chemistry, and Mathematics), along with the questions asked from each chapter and the corresponding marks obtained. The structure alternates between the chapter names, the questions asked, and the marks received in each subject. Physics Chapters: Contains the chapter name and the questions asked from each chapter in physics, along with the marks scored by the student,Chemistry Chapters: Similarly, includes the chapter name, question, and marks scored in chemistry,Mathematics Chapters: Contains the chapter name, the specific question asked, and the marks scored in mathematics.
+3. Column 11: Productivity_yes_no – This indicates whether the student was considered productive or not ("Yes" or "No").
+4. Column 12: Productivity_rate – A numerical scale ranging from 1 to 10, reflecting the student’s productivity based on their overall performance in the subjects.
+5. Column 13: Emotional_factors – Captures details about any emotional or psychological elements that might have affected the student’s performance, such as emotional stress, lack of motivation, or academic backlogs. This column highlights specific issues that could impact productivity and marks, such as "EMOTIONAL FACTORS" or "BACKLOGS". This column helps highlight specific concerns affecting the student.(academic_panic_buttons = ("MISSED CLASSES", "BACKLOGS", "LACK OF MOTIVATION", "NOT UNDERSTANDING", "BAD MARKS"), non_academic_panic_buttons = ("EMOTIONAL FACTORS", "PROCRASTINATE", "LOST INTEREST", "LACK OF FOCUS", "GOALS NOT ACHIEVED", "LACK OF DISCIPLINE"))
 
 {context}
 
@@ -28,14 +26,14 @@ Based on this data, generate a descriptive summary of the student's strengths, o
 Also provide some specific suggestions on how the student can improve. Avoid generic statements.
 """)
 
-summary_prompt_multiple = PromptTemplate.from_template("""\
+summary_prompt_multiple = PromptTemplate.from_template("""
 Here is the data for the students:
 The given structured data is complex, but the structure can be broken down as follows:
 1. Column 1: user_id – A unique identifier for each student.
-2. Columns 2 to 10: Subject_Scores – A collection of chapters for each subject (Physics, Chemistry, and Mathematics), along with the questions asked from each chapter and the corresponding marks obtained. The structure alternates between the chapter names, the questions asked, and the marks received in each subject. Physics Chapters: Contains the chapter name and the questions asked from each chapter in physics, along with the marks scored by the student, Chemistry Chapters: Similarly, includes the chapter name, question, and marks scored in chemistry, Mathematics Chapters: Contains the chapter name, the specific question asked, and the marks scored in mathematics.
-3. Column 11: productivity_yes_no – This indicates whether the student was considered productive or not ("Yes" or "No").
-4. Column 12: productivity_rate – A numerical scale ranging from 1 to 10, reflecting the student’s productivity based on their overall performance in the subjects.
-5. Column 13: emotional_factors – Captures details about any emotional or psychological elements that might have affected the student’s performance, such as emotional stress, lack of motivation, or academic backlogs. This column highlights specific issues that could impact productivity and marks, such as "EMOTIONAL FACTORS" or "BACKLOGS". This column helps highlight specific concerns affecting the student. (academic_panic_buttons = ("MISSED CLASSES", "BACKLOGS", "LACK OF MOTIVATION", "NOT UNDERSTANDING", "BAD MARKS"), non_academic_panic_buttons = ("EMOTIONAL FACTORS", "PROCRASTINATE", "LOST INTEREST", "LACK OF FOCUS", "GOALS NOT ACHIEVED", "LACK OF DISCIPLINE"))
+2. Columns 2 to 10: Subject_Scores – A collection of chapters for each subject (Physics, Chemistry, and Mathematics), along with the questions asked from each chapter and the corresponding marks obtained. The structure alternates between the chapter names, the questions asked, and the marks received in each subject. Physics Chapters: Contains the chapter name and the questions asked from each chapter in physics, along with the marks scored by the student,Chemistry Chapters: Similarly, includes the chapter name, question, and marks scored in chemistry,Mathematics Chapters: Contains the chapter name, the specific question asked, and the marks scored in mathematics.
+3. Column 11: Productivity_yes_no – This indicates whether the student was considered productive or not ("Yes" or "No").
+4. Column 12: Productivity_rate – A numerical scale ranging from 1 to 10, reflecting the student’s productivity based on their overall performance in the subjects.
+5. Column 13: Emotional_factors – Captures details about any emotional or psychological elements that might have affected the student’s performance, such as emotional stress, lack of motivation, or academic backlogs. This column highlights specific issues that could impact productivity and marks, such as "EMOTIONAL FACTORS" or "BACKLOGS". This column helps highlight specific concerns affecting the student.(academic_panic_buttons = ("MISSED CLASSES", "BACKLOGS", "LACK OF MOTIVATION", "NOT UNDERSTANDING", "BAD MARKS"), non_academic_panic_buttons = ("EMOTIONAL FACTORS", "PROCRASTINATE", "LOST INTEREST", "LACK OF FOCUS", "GOALS NOT ACHIEVED", "LACK OF DISCIPLINE"))
 
 {context}
 
@@ -48,8 +46,8 @@ Suggest ways they can learn from each other and address their challenges collabo
 def load_data():
     file_path = 'https://raw.githubusercontent.com/forittik/updated_soca_tool/refs/heads/main/Dummy_questions.csv'
     
-    # Load the data from the CSV file
-    df = pd.read_csv(file_path, header=0, encoding='ISO-8859-1')
+    # Load the data from the CSV file without a header
+    df = pd.read_csv(file_path, header=0, encoding='ISO-8859-1')  # or try 'utf-16'
 
     return df
 
@@ -71,22 +69,6 @@ def generate_multiple_students_summary(student_data):
     summary = summary_chain.invoke({"context": context})
     return summary
 
-def aggregate_student_data(df):
-    # Grouping by user_id and aggregating the subject scores
-    aggregated_data = df.groupby('user_id').agg(
-        {
-            'Marks_got_in_physics_chapters': 'mean',
-            'Marks_got_in_chemistry_chapters': 'mean',
-            'Marks_got_in_mathematics_chapters': 'mean',
-            'productivity_yes_no': lambda x: x.mode()[0] if not x.mode().empty else 'Unknown',
-            'productivity_rate': 'mean',
-            'emotional_factors': lambda x: ' '.join(x.dropna().unique())  # Combine emotional factors
-        }
-    ).reset_index()
-    
-    return aggregated_data
-
-
 def process_students(names, df):
     if isinstance(names, str):
         student_data = get_student_data(names, df)
@@ -99,50 +81,14 @@ def process_students(names, df):
             return "No data found for the given students."
         return generate_multiple_students_summary(combined_data)
 
-def plot_productivity_rate(df):
-    plt.figure(figsize=(10, 6))
-    sns.countplot(data=df, x='productivity_yes_no', palette='Set2')
-    plt.title('Student Productivity Distribution')
-    plt.xlabel('Productivity (Yes/No)')
-    plt.ylabel('Number of Students')
-    st.pyplot(plt)
-
-def plot_average_marks(df):
-    subjects = ['Marks_got_in_physics_chapters', 'Marks_got_in_chemistry_chapters', 'Marks_got_in_mathematics_chapters']
-    average_marks = df[subjects].mean()
-    
-    plt.figure(figsize=(10, 6))
-    average_marks.plot(kind='bar', color='skyblue')
-    plt.title('Average Marks per Subject')
-    plt.xlabel('Subjects')
-    plt.ylabel('Average Marks')
-    st.pyplot(plt)
-
-def plot_emotional_factors(df):
-    plt.figure(figsize=(10, 6))
-    emotional_counts = df['emotional_factors'].value_counts()
-    sns.barplot(x=emotional_counts.index, y=emotional_counts.values, palette='Set2')
-    plt.title('Emotional Factors Affecting Students')
-    plt.xticks(rotation=45)
-    plt.xlabel('Emotional Factors')
-    plt.ylabel('Number of Students')
-    st.pyplot(plt)
-
 st.title("B2B Dashboard")
 df = load_data()
-# Aggregate the student data
-aggregated_df = aggregate_student_data(df)
-student_names = aggregated_df['user_id'].tolist()
+student_names = df['user_id'].tolist()
 selected_names = st.multiselect("Select student(s) to analyze:", student_names)
 
 if st.button("Analyze student data"):
     if selected_names:
-        summary = process_students(selected_names, aggregated_df)
+        summary = process_students(selected_names, df)
         st.write(summary)
-
-        # Call visualization functions
-        plot_productivity_rate(aggregated_df)
-        plot_average_marks(aggregated_df)
-        plot_emotional_factors(aggregated_df)
     else:
         st.warning("Please select at least one student.")
