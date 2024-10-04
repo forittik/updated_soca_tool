@@ -45,10 +45,10 @@ Suggest ways they can learn from each other and address their challenges collabo
 @st.cache_data
 def load_data():
     # URL to the CSV file
-    file_path = '/content/Dummy_questions.xlsx'
+    file_path = 'https://raw.githubusercontent.com/forittik/updated_soca_tool/refs/heads/main/Dummy_questions.csv'
 
     # Load the data from the CSV file with the first row as the header
-    df = pd.read_excel(file_path, header=0)
+    df = pd.read_csv(file_path, header=0)
 
     return df
 
