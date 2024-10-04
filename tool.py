@@ -39,16 +39,24 @@ def generate_multiple_students_summary(student_data):
     return summary
 
 def aggregate_student_data(df):
-    # Function to convert string list to numeric list and calculate mean
+    # Function to convert mixed type list to numeric list and calculate mean
     def process_marks(marks_list):
-        numeric_marks = [int(mark) for mark in marks_list if mark.strip().isdigit()]
+        numeric_marks = []
+        for mark in marks_list:
+            if isinstance(mark, (int, float)):
+                numeric_marks.append(mark)
+            elif isinstance(mark, str):
+                try:
+                    numeric_marks.append(float(mark.strip()))
+                except ValueError:
+                    pass  # Ignore non-numeric strings
         return sum(numeric_marks) / len(numeric_marks) if numeric_marks else 0
 
     # Grouping by user_id and aggregating the subject scores
     aggregated_data = df.groupby('user_id').agg({
-        'Marks_got_in_physics_chapters': lambda x: process_marks(x),
-        'Marks_got_in_chemistry_chapters': lambda x: process_marks(x),
-        'Marks_got_in_mathematics_chapters': lambda x: process_marks(x),
+        'Marks_got_in_physics_chapters': process_marks,
+        'Marks_got_in_chemistry_chapters': process_marks,
+        'Marks_got_in_mathematics_chapters': process_marks,
         'productivity_yes_no': lambda x: x.iloc[-1],  # Get the last entry
         'productivity_rate': lambda x: x.iloc[-1],    # Get the last entry
         'emotional_factors': lambda x: ' '.join(x.dropna().astype(str))
