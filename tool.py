@@ -71,9 +71,12 @@ def generate_multiple_students_summary(student_data):
 
 def aggregate_student_data(df):
     # Grouping by user_id and aggregating the subject scores
-    aggregated_data = df.groupby('user_id').agg(lambda x: list(x) if x.name in ['Marks_got_in_physics_chapters', 
-                                                                               'Marks_got_in_chemistry_chapters', 
-                                                                               'Marks_got_in_mathematics_chapters'] else ' '.join(x)).reset_index()
+    aggregated_data = df.groupby('user_id').agg(
+        lambda x: list(x.dropna().astype(str)) if x.name in ['Marks_got_in_physics_chapters', 
+                                                                'Marks_got_in_chemistry_chapters', 
+                                                                'Marks_got_in_mathematics_chapters'] 
+        else ' '.join(x.dropna().astype(str))
+    ).reset_index()
     return aggregated_data
 
 def process_students(names, df):
